@@ -25,7 +25,7 @@
         /* ===== 容器 & 卡片 ===== */
         #app {
             width: 100%;
-            max-width: 500px;
+            max-width: 480px;
             position: relative;
         }
 
@@ -46,7 +46,7 @@
             display: none;
         }
 
-        /* ===== 登录 / 注册 页面 ===== */
+        /* ===== 登录页面 ===== */
         .auth-title {
             font-size: 28px;
             font-weight: 700;
@@ -120,39 +120,6 @@
         .btn:active {
             transform: translateY(0px);
             box-shadow: 0 4px 12px rgba(124, 95, 207, 0.25);
-        }
-
-        .btn-secondary {
-            background: rgba(124, 95, 207, 0.12);
-            color: #5d41a3;
-            box-shadow: none;
-            margin-top: 12px;
-        }
-
-        .btn-secondary:hover {
-            background: rgba(124, 95, 207, 0.20);
-            box-shadow: 0 4px 12px rgba(124, 95, 207, 0.10);
-            transform: translateY(-1px);
-        }
-
-        .switch-link {
-            text-align: center;
-            margin-top: 20px;
-            font-size: 15px;
-            color: #7b6b9a;
-        }
-
-        .switch-link a {
-            color: #6f4fc9;
-            font-weight: 600;
-            text-decoration: none;
-            cursor: pointer;
-            transition: color 0.2s;
-        }
-
-        .switch-link a:hover {
-            color: #4f3199;
-            text-decoration: underline;
         }
 
         .error-msg {
@@ -265,11 +232,6 @@
         .text-display:hover {
             border-color: #a88be0;
             background: rgba(255, 255, 255, 0.8);
-        }
-
-        .text-display .placeholder {
-            color: #b0a3c9;
-            font-size: 16px;
         }
 
         .text-display .text-content {
@@ -430,10 +392,10 @@
 <body>
 
     <div id="app">
-        <!-- ==================== 登录页面 ==================== -->
+        <!-- ==================== 登录页面（仅登录，无注册） ==================== -->
         <div id="loginPage" class="card">
             <div class="auth-title">🔐 登录</div>
-            <div class="auth-sub">输入账号密码，进入你的专属空间</div>
+            <div class="auth-sub">输入账号密码（管理员在代码中维护）</div>
 
             <div id="loginError" class="error-msg"></div>
 
@@ -447,37 +409,6 @@
             </div>
 
             <button class="btn" id="loginBtn">登 录</button>
-
-            <div class="switch-link">
-                还没有账号？ <a id="gotoRegister">立即注册</a>
-            </div>
-        </div>
-
-        <!-- ==================== 注册页面 ==================== -->
-        <div id="registerPage" class="card hidden">
-            <div class="auth-title">✨ 注册</div>
-            <div class="auth-sub">创建一个新账号，保存你的专属字符</div>
-
-            <div id="registerError" class="error-msg"></div>
-
-            <div class="form-group">
-                <label for="registerUsername">账号</label>
-                <input type="text" id="registerUsername" placeholder="请设置用户名" autocomplete="username" />
-            </div>
-            <div class="form-group">
-                <label for="registerPassword">密码</label>
-                <input type="password" id="registerPassword" placeholder="请设置密码" autocomplete="new-password" />
-            </div>
-            <div class="form-group">
-                <label for="registerConfirm">确认密码</label>
-                <input type="password" id="registerConfirm" placeholder="再次输入密码" autocomplete="new-password" />
-            </div>
-
-            <button class="btn" id="registerBtn">注 册</button>
-
-            <div class="switch-link">
-                已有账号？ <a id="gotoLogin">返回登录</a>
-            </div>
         </div>
 
         <!-- ==================== 主页面 ==================== -->
@@ -513,7 +444,20 @@
 
     <script>
         // ============================================================
-        //  数据层
+        //  📦 账号管理 —— 在这里增删账号和密码
+        //  格式： '用户名': '密码'  （请务必使用英文引号）
+        //  示例： 'admin': '123456'
+        // ============================================================
+        const ACCOUNTS = {
+            'admin': '123456',
+            'user1': 'password1',
+            // 添加更多账号，例如：
+            // 'zhangsan': 'abc123',
+            // 'lisi': '12345678',
+        };
+
+        // ============================================================
+        //  数据层 (localStorage)
         // ============================================================
 
         const STORAGE_KEY = 'auth_text_app';
@@ -523,23 +467,21 @@
                 const raw = localStorage.getItem(STORAGE_KEY);
                 if (raw) return JSON.parse(raw);
             } catch (_) { /* ignore */ }
-            return { users: {}, userData: {} };
+            return { userData: {} };
         }
 
         function saveStorage(data) {
             localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
         }
 
-        // 获取某个用户的文本，不存在则返回默认值
         function getUserText(username) {
             const store = getStorage();
             if (store.userData && store.userData[username] && store.userData[username].text !== undefined) {
                 return store.userData[username].text;
             }
-            return '鸡你太美';
+            return '欢迎使用！';
         }
 
-        // 设置某个用户的文本
         function setUserText(username, text) {
             const store = getStorage();
             if (!store.userData) store.userData = {};
@@ -548,55 +490,28 @@
             saveStorage(store);
         }
 
-        // 验证登录
+        // 验证登录 —— 直接检查 ACCOUNTS 对象
         function verifyLogin(username, password) {
-            const store = getStorage();
-            if (store.users && store.users[username] === password) {
-                return true;
-            }
-            return false;
-        }
-
-        // 注册用户
-        function registerUser(username, password) {
-            const store = getStorage();
-            if (store.users && store.users[username]) {
-                return false; // 用户名已存在
-            }
-            if (!store.users) store.users = {};
-            store.users[username] = password;
-            // 初始化用户数据
-            if (!store.userData) store.userData = {};
-            if (!store.userData[username]) store.userData[username] = {};
-            store.userData[username].text = '欢迎使用！';
-            saveStorage(store);
-            return true;
+            return ACCOUNTS.hasOwnProperty(username) && ACCOUNTS[username] === password;
         }
 
         // ============================================================
         //  状态管理
         // ============================================================
 
-        let currentUser = null; // 当前登录用户名
+        let currentUser = null;
         let isEditing = false;
 
         // DOM 引用
         const $ = (id) => document.getElementById(id);
 
         const loginPage = $('loginPage');
-        const registerPage = $('registerPage');
         const mainPage = $('mainPage');
 
         const loginUsername = $('loginUsername');
         const loginPassword = $('loginPassword');
         const loginError = $('loginError');
         const loginBtn = $('loginBtn');
-
-        const registerUsername = $('registerUsername');
-        const registerPassword = $('registerPassword');
-        const registerConfirm = $('registerConfirm');
-        const registerError = $('registerError');
-        const registerBtn = $('registerBtn');
 
         const mainUsername = $('mainUsername');
         const avatarLetter = $('avatarLetter');
@@ -605,24 +520,18 @@
         const saveToast = $('saveToast');
         const logoutBtn = $('logoutBtn');
 
-        const gotoRegister = $('gotoRegister');
-        const gotoLogin = $('gotoLogin');
-
         // ============================================================
         //  页面切换
         // ============================================================
 
         function showPage(page) {
-            [loginPage, registerPage, mainPage].forEach(el => el.classList.add('hidden'));
+            [loginPage, mainPage].forEach(el => el.classList.add('hidden'));
             page.classList.remove('hidden');
-            // 重新触发动画
             page.style.animation = 'none';
             requestAnimationFrame(() => {
                 page.style.animation = '';
             });
-            // 清空错误
             loginError.classList.remove('show');
-            registerError.classList.remove('show');
             saveToast.classList.remove('show');
         }
 
@@ -633,31 +542,20 @@
             loginUsername.focus();
         }
 
-        function showRegister() {
-            showPage(registerPage);
-            registerUsername.value = '';
-            registerPassword.value = '';
-            registerConfirm.value = '';
-            registerUsername.focus();
-        }
-
         function showMain(username) {
             currentUser = username;
             showPage(mainPage);
-            // 更新用户信息
             mainUsername.textContent = username;
             avatarLetter.textContent = username.charAt(0).toUpperCase() || '👤';
-            // 加载文本
             const text = getUserText(username);
             textContent.textContent = text;
             textDisplay.classList.remove('editing');
             isEditing = false;
-            // 隐藏toast
             saveToast.classList.remove('show');
         }
 
         // ============================================================
-        //  登录 / 注册 逻辑
+        //  登录逻辑
         // ============================================================
 
         function doLogin() {
@@ -672,55 +570,14 @@
 
             if (verifyLogin(username, password)) {
                 loginError.classList.remove('show');
+                // 保存 session (用于刷新保持登录)
+                sessionStorage.setItem('auth_app_session', JSON.stringify({ username, password }));
                 showMain(username);
             } else {
                 loginError.textContent = '❌ 账号或密码错误，请重试';
                 loginError.classList.add('show');
                 loginPassword.value = '';
                 loginPassword.focus();
-            }
-        }
-
-        function doRegister() {
-            const username = registerUsername.value.trim();
-            const password = registerPassword.value.trim();
-            const confirm = registerConfirm.value.trim();
-
-            if (!username || !password || !confirm) {
-                registerError.textContent = '⚠️ 请填写所有字段';
-                registerError.classList.add('show');
-                return;
-            }
-
-            if (username.length < 2) {
-                registerError.textContent = '⚠️ 用户名至少2个字符';
-                registerError.classList.add('show');
-                return;
-            }
-
-            if (password.length < 4) {
-                registerError.textContent = '⚠️ 密码至少4个字符';
-                registerError.classList.add('show');
-                return;
-            }
-
-            if (password !== confirm) {
-                registerError.textContent = '⚠️ 两次输入的密码不一致';
-                registerError.classList.add('show');
-                registerConfirm.value = '';
-                registerConfirm.focus();
-                return;
-            }
-
-            if (registerUser(username, password)) {
-                registerError.classList.remove('show');
-                // 注册成功，自动登录
-                showMain(username);
-            } else {
-                registerError.textContent = '❌ 用户名已被注册，请换一个';
-                registerError.classList.add('show');
-                registerUsername.value = '';
-                registerUsername.focus();
             }
         }
 
@@ -733,7 +590,6 @@
             if (!currentUser) return;
 
             const currentText = textContent.textContent;
-            // 创建 input
             const input = document.createElement('input');
             input.type = 'text';
             input.className = 'text-input';
@@ -741,30 +597,22 @@
             input.placeholder = '输入你想保存的字符…';
             input.autofocus = true;
 
-            // 替换内容
             textContent.textContent = '';
             textContent.appendChild(input);
             textDisplay.classList.add('editing');
             isEditing = true;
-
-            // 全选
             input.select();
 
-            // 保存函数
             function saveEdit() {
                 if (!isEditing) return;
                 const newText = input.value.trim() || '（空）';
-                // 更新显示
                 textContent.textContent = newText;
                 textDisplay.classList.remove('editing');
                 isEditing = false;
-                // 保存到存储
                 setUserText(currentUser, newText);
-                // 显示保存提示
                 showSaveToast();
             }
 
-            // 回车保存
             input.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter') {
                     e.preventDefault();
@@ -776,7 +624,6 @@
                 }
             });
 
-            // 失去焦点保存
             input.addEventListener('blur', saveEdit);
         }
 
@@ -794,7 +641,6 @@
 
         function doLogout() {
             if (isEditing) {
-                // 如果正在编辑，强制退出编辑模式
                 const input = textContent.querySelector('.text-input');
                 if (input) {
                     const val = input.value.trim() || '（空）';
@@ -805,6 +651,7 @@
                 }
             }
             currentUser = null;
+            sessionStorage.removeItem('auth_app_session');
             showLogin();
         }
 
@@ -812,55 +659,28 @@
         //  事件绑定
         // ============================================================
 
-        // 登录
         loginBtn.addEventListener('click', doLogin);
         loginUsername.addEventListener('keydown', (e) => { if (e.key === 'Enter') loginPassword.focus(); });
         loginPassword.addEventListener('keydown', (e) => { if (e.key === 'Enter') doLogin(); });
 
-        // 注册
-        registerBtn.addEventListener('click', doRegister);
-        registerUsername.addEventListener('keydown', (e) => { if (e.key === 'Enter') registerPassword.focus(); });
-        registerPassword.addEventListener('keydown', (e) => { if (e.key === 'Enter') registerConfirm.focus(); });
-        registerConfirm.addEventListener('keydown', (e) => { if (e.key === 'Enter') doRegister(); });
-
-        // 切换页面
-        gotoRegister.addEventListener('click', showRegister);
-        gotoLogin.addEventListener('click', showLogin);
-
-        // 退出
         logoutBtn.addEventListener('click', doLogout);
 
-        // 点击文本区域进入编辑
         textDisplay.addEventListener('click', (e) => {
-            // 如果点击的是 input 本身，不重复触发
             if (e.target.tagName === 'INPUT') return;
             enterEditMode();
         });
 
-        // 点击外部（页面其他地方）不会触发，但 blur 已经处理保存
+        // Ctrl+Enter 保存
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.key === 'Enter' && isEditing) {
+                const input = textContent.querySelector('.text-input');
+                if (input) input.blur();
+            }
+        });
 
         // ============================================================
-        //  自动登录检查（刷新页面保持登录状态）
+        //  自动登录 (刷新保持)
         // ============================================================
-
-        // 尝试从存储中恢复登录状态 —— 我们可以从 localStorage 中读取上次登录的用户
-        // 但为了安全，我们简单检查是否有 "记住" 机制。这里我们用一个简单方案：
-        // 如果 localStorage 中存有 lastUser，并且该用户存在，则自动登录。
-        // 但为了演示，我们不自动登录，让用户手动登录。
-        // 但是我们可以提供一个"记住我"的功能？为了简洁，我们不增加复杂度。
-        // 用户刷新页面后需要重新登录，这是最安全的。
-
-        // 不过我们可以做一个简单的优化：如果当前有登录用户，刷新后保持登录？
-        // 但 localStorage 中并没有存储 session 信息，所以刷新后需要重新登录。
-        // 为了更好的体验，我们可以在登录成功后，在 sessionStorage 中记录登录状态。
-        // 但为了安全，我们采用最直接的方式：刷新后需要重新登录。
-
-        // 但很多用户希望刷新后保持登录，我们使用 sessionStorage 来保持
-        // 但 sessionStorage 在页面关闭后失效，刷新页面仍然有效。
-        // 更好的方式：使用 localStorage 存储一个 token，但这里我们简单处理。
-
-        // 我决定使用 sessionStorage 来保持登录状态，这样刷新页面不会丢失登录状态。
-        // 关闭浏览器标签页后，需要重新登录。
 
         function tryAutoLogin() {
             const saved = sessionStorage.getItem('auth_app_session');
@@ -870,135 +690,25 @@
                     if (data.username && verifyLogin(data.username, data.password)) {
                         showMain(data.username);
                         return true;
+                    } else {
+                        // 账号被删或密码改了，清除失效 session
+                        sessionStorage.removeItem('auth_app_session');
                     }
                 } catch (_) { /* ignore */ }
             }
             return false;
         }
 
-        // 在登录成功后保存 session
-        function saveSession(username, password) {
-            sessionStorage.setItem('auth_app_session', JSON.stringify({ username, password }));
-        }
-
-        // 在退出时清除 session
-        function clearSession() {
-            sessionStorage.removeItem('auth_app_session');
-        }
-
-        // 重写 showMain 以保存 session
-        const originalShowMain = showMain;
-        showMain = function(username) {
-            // 获取密码（从登录表单或注册表单）
-            // 为了保存session，我们需要密码。但注册时密码已知。
-            // 简单起见：在登录/注册时保存session
-            originalShowMain(username);
-        };
-
-        // 重写 doLogin
-        const originalDoLogin = doLogin;
-        doLogin = function() {
-            const username = loginUsername.value.trim();
-            const password = loginPassword.value.trim();
-            if (!username || !password) {
-                loginError.textContent = '⚠️ 请填写完整的账号和密码';
-                loginError.classList.add('show');
-                return;
-            }
-            if (verifyLogin(username, password)) {
-                loginError.classList.remove('show');
-                saveSession(username, password);
-                showMain(username);
-            } else {
-                loginError.textContent = '❌ 账号或密码错误，请重试';
-                loginError.classList.add('show');
-                loginPassword.value = '';
-                loginPassword.focus();
-            }
-        };
-
-        // 重写 doRegister
-        const originalDoRegister = doRegister;
-        doRegister = function() {
-            const username = registerUsername.value.trim();
-            const password = registerPassword.value.trim();
-            const confirm = registerConfirm.value.trim();
-
-            if (!username || !password || !confirm) {
-                registerError.textContent = '⚠️ 请填写所有字段';
-                registerError.classList.add('show');
-                return;
-            }
-            if (username.length < 2) {
-                registerError.textContent = '⚠️ 用户名至少2个字符';
-                registerError.classList.add('show');
-                return;
-            }
-            if (password.length < 4) {
-                registerError.textContent = '⚠️ 密码至少4个字符';
-                registerError.classList.add('show');
-                return;
-            }
-            if (password !== confirm) {
-                registerError.textContent = '⚠️ 两次输入的密码不一致';
-                registerError.classList.add('show');
-                registerConfirm.value = '';
-                registerConfirm.focus();
-                return;
-            }
-            if (registerUser(username, password)) {
-                registerError.classList.remove('show');
-                saveSession(username, password);
-                showMain(username);
-            } else {
-                registerError.textContent = '❌ 用户名已被注册，请换一个';
-                registerError.classList.add('show');
-                registerUsername.value = '';
-                registerUsername.focus();
-            }
-        };
-
-        // 重写 doLogout
-        const originalDoLogout = doLogout;
-        doLogout = function() {
-            if (isEditing) {
-                const input = textContent.querySelector('.text-input');
-                if (input) {
-                    const val = input.value.trim() || '（空）';
-                    textContent.textContent = val;
-                    textDisplay.classList.remove('editing');
-                    isEditing = false;
-                    setUserText(currentUser, val);
-                }
-            }
-            currentUser = null;
-            clearSession();
-            showLogin();
-        };
-
-        // ============================================================
-        //  键盘快捷键：Ctrl+Enter 保存编辑
-        // ============================================================
-
-        document.addEventListener('keydown', (e) => {
-            if (e.ctrlKey && e.key === 'Enter' && isEditing) {
-                const input = textContent.querySelector('.text-input');
-                if (input) {
-                    input.blur();
-                }
-            }
-        });
-
         // ============================================================
         //  初始化
         // ============================================================
 
-        // 尝试自动登录
         if (!tryAutoLogin()) {
             showLogin();
         }
 
-        console.log('✅ 应用已启动 — 登录后可编辑字符，数据保存在 localStorage');
+        console.log('✅ 应用已启动 — 账号由代码中的 ACCOUNTS 对象管理');
+        console.log('📋 当前可用账号:', Object.keys(ACCOUNTS));
     </script>
 
 </body>
