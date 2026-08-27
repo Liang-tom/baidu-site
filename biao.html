@@ -1,0 +1,1005 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>登录 · 字符编辑</title>
+    <style>
+        /* ===== 全局重置 & 字体 ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'PingFang SC', Roboto, system-ui, -apple-system, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(145deg, #f6f0ff 0%, #e9defa 100%);
+            padding: 20px;
+        }
+
+        /* ===== 容器 & 卡片 ===== */
+        #app {
+            width: 100%;
+            max-width: 500px;
+            position: relative;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(16px) saturate(180%);
+            -webkit-backdrop-filter: blur(16px) saturate(180%);
+            border-radius: 32px;
+            padding: 40px 36px 44px;
+            box-shadow: 0 20px 60px rgba(120, 80, 200, 0.18),
+                        0 8px 24px rgba(120, 80, 200, 0.08),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+
+        .card.hidden {
+            display: none;
+        }
+
+        /* ===== 登录 / 注册 页面 ===== */
+        .auth-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #2d1b4e;
+            letter-spacing: -0.5px;
+            margin-bottom: 8px;
+        }
+
+        .auth-sub {
+            font-size: 15px;
+            color: #7b6b9a;
+            margin-bottom: 28px;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: #3d2a5e;
+            margin-bottom: 6px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 14px 18px;
+            border: 2px solid #e6def5;
+            border-radius: 16px;
+            font-size: 16px;
+            background: rgba(255, 255, 255, 0.7);
+            transition: border 0.25s, box-shadow 0.25s;
+            outline: none;
+            color: #1f1433;
+        }
+
+        .form-group input:focus {
+            border-color: #8b6fd4;
+            box-shadow: 0 0 0 4px rgba(139, 111, 212, 0.15);
+            background: #ffffff;
+        }
+
+        .form-group input::placeholder {
+            color: #b0a3c9;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: 16px;
+            font-size: 17px;
+            font-weight: 600;
+            background: linear-gradient(135deg, #7c5fcf, #a07fe0);
+            color: #fff;
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.25s, background 0.25s;
+            box-shadow: 0 6px 20px rgba(124, 95, 207, 0.30);
+            margin-top: 6px;
+            letter-spacing: 0.3px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 28px rgba(124, 95, 207, 0.35);
+            background: linear-gradient(135deg, #6f4fc9, #9570db);
+        }
+
+        .btn:active {
+            transform: translateY(0px);
+            box-shadow: 0 4px 12px rgba(124, 95, 207, 0.25);
+        }
+
+        .btn-secondary {
+            background: rgba(124, 95, 207, 0.12);
+            color: #5d41a3;
+            box-shadow: none;
+            margin-top: 12px;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(124, 95, 207, 0.20);
+            box-shadow: 0 4px 12px rgba(124, 95, 207, 0.10);
+            transform: translateY(-1px);
+        }
+
+        .switch-link {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 15px;
+            color: #7b6b9a;
+        }
+
+        .switch-link a {
+            color: #6f4fc9;
+            font-weight: 600;
+            text-decoration: none;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .switch-link a:hover {
+            color: #4f3199;
+            text-decoration: underline;
+        }
+
+        .error-msg {
+            background: #fde8e8;
+            color: #b33636;
+            padding: 12px 18px;
+            border-radius: 14px;
+            font-size: 14px;
+            margin-bottom: 16px;
+            border-left: 4px solid #b33636;
+            display: none;
+        }
+
+        .error-msg.show {
+            display: block;
+        }
+
+        /* ===== 主页面 ===== */
+        .main-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid rgba(124, 95, 207, 0.12);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #7c5fcf, #a07fe0);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-weight: 700;
+            font-size: 18px;
+            box-shadow: 0 4px 12px rgba(124, 95, 207, 0.25);
+            flex-shrink: 0;
+        }
+
+        .username-display {
+            font-weight: 600;
+            font-size: 18px;
+            color: #2d1b4e;
+        }
+
+        .btn-logout {
+            padding: 8px 20px;
+            border: none;
+            border-radius: 30px;
+            background: rgba(124, 95, 207, 0.10);
+            color: #5d41a3;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.15s;
+        }
+
+        .btn-logout:hover {
+            background: rgba(124, 95, 207, 0.20);
+            transform: scale(1.02);
+        }
+
+        /* ---- 字符编辑区域 ---- */
+        .text-section {
+            margin-top: 8px;
+        }
+
+        .text-label {
+            font-size: 14px;
+            font-weight: 500;
+            color: #7b6b9a;
+            letter-spacing: 0.3px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .text-label .badge {
+            font-size: 11px;
+            background: rgba(124, 95, 207, 0.12);
+            color: #5d41a3;
+            padding: 2px 12px;
+            border-radius: 30px;
+            font-weight: 500;
+        }
+
+        .text-display {
+            background: rgba(255, 255, 255, 0.6);
+            border: 2px dashed #d6cced;
+            border-radius: 20px;
+            padding: 20px 24px;
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            transition: border 0.25s, background 0.25s, box-shadow 0.25s;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .text-display:hover {
+            border-color: #a88be0;
+            background: rgba(255, 255, 255, 0.8);
+        }
+
+        .text-display .placeholder {
+            color: #b0a3c9;
+            font-size: 16px;
+        }
+
+        .text-display .text-content {
+            font-size: 22px;
+            font-weight: 500;
+            color: #1f1433;
+            word-break: break-all;
+            line-height: 1.5;
+            width: 100%;
+        }
+
+        .text-display .edit-hint {
+            position: absolute;
+            right: 16px;
+            bottom: 12px;
+            font-size: 12px;
+            color: #b0a3c9;
+            background: rgba(255, 255, 255, 0.8);
+            padding: 2px 14px;
+            border-radius: 30px;
+            opacity: 0;
+            transition: opacity 0.25s;
+            pointer-events: none;
+        }
+
+        .text-display:hover .edit-hint {
+            opacity: 1;
+        }
+
+        /* 编辑状态 */
+        .text-display.editing {
+            border-color: #7c5fcf;
+            border-style: solid;
+            background: #ffffff;
+            box-shadow: 0 0 0 4px rgba(124, 95, 207, 0.08);
+            cursor: text;
+        }
+
+        .text-display.editing .edit-hint {
+            opacity: 0;
+        }
+
+        .text-display .text-input {
+            width: 100%;
+            border: none;
+            background: transparent;
+            font-size: 22px;
+            font-weight: 500;
+            color: #1f1433;
+            outline: none;
+            padding: 0;
+            font-family: inherit;
+            line-height: 1.5;
+        }
+
+        .text-display .text-input::placeholder {
+            color: #c5b8df;
+            font-weight: 400;
+        }
+
+        /* ---- 保存提示 ---- */
+        .save-toast {
+            margin-top: 18px;
+            padding: 12px 18px;
+            border-radius: 14px;
+            font-size: 14px;
+            font-weight: 500;
+            background: #e8f5e9;
+            color: #2e7d32;
+            border-left: 4px solid #43a047;
+            display: none;
+            align-items: center;
+            gap: 8px;
+            transition: opacity 0.3s;
+        }
+
+        .save-toast.show {
+            display: flex;
+        }
+
+        .save-toast svg {
+            flex-shrink: 0;
+        }
+
+        /* ===== 响应式 ===== */
+        @media (max-width: 520px) {
+            .card {
+                padding: 28px 20px 32px;
+                border-radius: 24px;
+            }
+
+            .auth-title {
+                font-size: 24px;
+            }
+
+            .text-display .text-content,
+            .text-display .text-input {
+                font-size: 18px;
+            }
+
+            .text-display {
+                padding: 16px 18px;
+                min-height: 64px;
+            }
+
+            .main-header {
+                flex-wrap: wrap;
+                gap: 12px;
+            }
+
+            .btn-logout {
+                padding: 6px 16px;
+                font-size: 13px;
+            }
+        }
+
+        @media (max-width: 400px) {
+            .card {
+                padding: 20px 16px 24px;
+            }
+
+            .auth-title {
+                font-size: 20px;
+            }
+
+            .form-group input {
+                padding: 12px 14px;
+                font-size: 15px;
+            }
+
+            .btn {
+                padding: 14px;
+                font-size: 15px;
+            }
+        }
+
+        /* ===== 淡入动画 ===== */
+        .fade-in {
+            animation: fadeIn 0.4s ease forwards;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .card:not(.hidden) {
+            animation: fadeIn 0.4s ease forwards;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="app">
+        <!-- ==================== 登录页面 ==================== -->
+        <div id="loginPage" class="card">
+            <div class="auth-title">🔐 登录</div>
+            <div class="auth-sub">输入账号密码，进入你的专属空间</div>
+
+            <div id="loginError" class="error-msg"></div>
+
+            <div class="form-group">
+                <label for="loginUsername">账号</label>
+                <input type="text" id="loginUsername" placeholder="请输入用户名" autocomplete="username" />
+            </div>
+            <div class="form-group">
+                <label for="loginPassword">密码</label>
+                <input type="password" id="loginPassword" placeholder="请输入密码" autocomplete="current-password" />
+            </div>
+
+            <button class="btn" id="loginBtn">登 录</button>
+
+            <div class="switch-link">
+                还没有账号？ <a id="gotoRegister">立即注册</a>
+            </div>
+        </div>
+
+        <!-- ==================== 注册页面 ==================== -->
+        <div id="registerPage" class="card hidden">
+            <div class="auth-title">✨ 注册</div>
+            <div class="auth-sub">创建一个新账号，保存你的专属字符</div>
+
+            <div id="registerError" class="error-msg"></div>
+
+            <div class="form-group">
+                <label for="registerUsername">账号</label>
+                <input type="text" id="registerUsername" placeholder="请设置用户名" autocomplete="username" />
+            </div>
+            <div class="form-group">
+                <label for="registerPassword">密码</label>
+                <input type="password" id="registerPassword" placeholder="请设置密码" autocomplete="new-password" />
+            </div>
+            <div class="form-group">
+                <label for="registerConfirm">确认密码</label>
+                <input type="password" id="registerConfirm" placeholder="再次输入密码" autocomplete="new-password" />
+            </div>
+
+            <button class="btn" id="registerBtn">注 册</button>
+
+            <div class="switch-link">
+                已有账号？ <a id="gotoLogin">返回登录</a>
+            </div>
+        </div>
+
+        <!-- ==================== 主页面 ==================== -->
+        <div id="mainPage" class="card hidden">
+            <div class="main-header">
+                <div class="user-info">
+                    <div class="avatar" id="avatarLetter">👤</div>
+                    <span class="username-display" id="mainUsername">用户</span>
+                </div>
+                <button class="btn-logout" id="logoutBtn">退出</button>
+            </div>
+
+            <div class="text-section">
+                <div class="text-label">
+                    📝 我的字符
+                    <span class="badge">点击即可编辑</span>
+                </div>
+
+                <div class="text-display" id="textDisplay">
+                    <span class="text-content" id="textContent">欢迎使用！</span>
+                    <span class="edit-hint">✏️ 点击编辑</span>
+                </div>
+
+                <div class="save-toast" id="saveToast">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20 6L9 17l-5-5" />
+                    </svg>
+                    <span>已保存</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================================
+        //  数据层
+        // ============================================================
+
+        const STORAGE_KEY = 'auth_text_app';
+
+        function getStorage() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                if (raw) return JSON.parse(raw);
+            } catch (_) { /* ignore */ }
+            return { users: {}, userData: {} };
+        }
+
+        function saveStorage(data) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        }
+
+        // 获取某个用户的文本，不存在则返回默认值
+        function getUserText(username) {
+            const store = getStorage();
+            if (store.userData && store.userData[username] && store.userData[username].text !== undefined) {
+                return store.userData[username].text;
+            }
+            return '欢迎使用！';
+        }
+
+        // 设置某个用户的文本
+        function setUserText(username, text) {
+            const store = getStorage();
+            if (!store.userData) store.userData = {};
+            if (!store.userData[username]) store.userData[username] = {};
+            store.userData[username].text = text;
+            saveStorage(store);
+        }
+
+        // 验证登录
+        function verifyLogin(username, password) {
+            const store = getStorage();
+            if (store.users && store.users[username] === password) {
+                return true;
+            }
+            return false;
+        }
+
+        // 注册用户
+        function registerUser(username, password) {
+            const store = getStorage();
+            if (store.users && store.users[username]) {
+                return false; // 用户名已存在
+            }
+            if (!store.users) store.users = {};
+            store.users[username] = password;
+            // 初始化用户数据
+            if (!store.userData) store.userData = {};
+            if (!store.userData[username]) store.userData[username] = {};
+            store.userData[username].text = '欢迎使用！';
+            saveStorage(store);
+            return true;
+        }
+
+        // ============================================================
+        //  状态管理
+        // ============================================================
+
+        let currentUser = null; // 当前登录用户名
+        let isEditing = false;
+
+        // DOM 引用
+        const $ = (id) => document.getElementById(id);
+
+        const loginPage = $('loginPage');
+        const registerPage = $('registerPage');
+        const mainPage = $('mainPage');
+
+        const loginUsername = $('loginUsername');
+        const loginPassword = $('loginPassword');
+        const loginError = $('loginError');
+        const loginBtn = $('loginBtn');
+
+        const registerUsername = $('registerUsername');
+        const registerPassword = $('registerPassword');
+        const registerConfirm = $('registerConfirm');
+        const registerError = $('registerError');
+        const registerBtn = $('registerBtn');
+
+        const mainUsername = $('mainUsername');
+        const avatarLetter = $('avatarLetter');
+        const textDisplay = $('textDisplay');
+        const textContent = $('textContent');
+        const saveToast = $('saveToast');
+        const logoutBtn = $('logoutBtn');
+
+        const gotoRegister = $('gotoRegister');
+        const gotoLogin = $('gotoLogin');
+
+        // ============================================================
+        //  页面切换
+        // ============================================================
+
+        function showPage(page) {
+            [loginPage, registerPage, mainPage].forEach(el => el.classList.add('hidden'));
+            page.classList.remove('hidden');
+            // 重新触发动画
+            page.style.animation = 'none';
+            requestAnimationFrame(() => {
+                page.style.animation = '';
+            });
+            // 清空错误
+            loginError.classList.remove('show');
+            registerError.classList.remove('show');
+            saveToast.classList.remove('show');
+        }
+
+        function showLogin() {
+            showPage(loginPage);
+            loginUsername.value = '';
+            loginPassword.value = '';
+            loginUsername.focus();
+        }
+
+        function showRegister() {
+            showPage(registerPage);
+            registerUsername.value = '';
+            registerPassword.value = '';
+            registerConfirm.value = '';
+            registerUsername.focus();
+        }
+
+        function showMain(username) {
+            currentUser = username;
+            showPage(mainPage);
+            // 更新用户信息
+            mainUsername.textContent = username;
+            avatarLetter.textContent = username.charAt(0).toUpperCase() || '👤';
+            // 加载文本
+            const text = getUserText(username);
+            textContent.textContent = text;
+            textDisplay.classList.remove('editing');
+            isEditing = false;
+            // 隐藏toast
+            saveToast.classList.remove('show');
+        }
+
+        // ============================================================
+        //  登录 / 注册 逻辑
+        // ============================================================
+
+        function doLogin() {
+            const username = loginUsername.value.trim();
+            const password = loginPassword.value.trim();
+
+            if (!username || !password) {
+                loginError.textContent = '⚠️ 请填写完整的账号和密码';
+                loginError.classList.add('show');
+                return;
+            }
+
+            if (verifyLogin(username, password)) {
+                loginError.classList.remove('show');
+                showMain(username);
+            } else {
+                loginError.textContent = '❌ 账号或密码错误，请重试';
+                loginError.classList.add('show');
+                loginPassword.value = '';
+                loginPassword.focus();
+            }
+        }
+
+        function doRegister() {
+            const username = registerUsername.value.trim();
+            const password = registerPassword.value.trim();
+            const confirm = registerConfirm.value.trim();
+
+            if (!username || !password || !confirm) {
+                registerError.textContent = '⚠️ 请填写所有字段';
+                registerError.classList.add('show');
+                return;
+            }
+
+            if (username.length < 2) {
+                registerError.textContent = '⚠️ 用户名至少2个字符';
+                registerError.classList.add('show');
+                return;
+            }
+
+            if (password.length < 4) {
+                registerError.textContent = '⚠️ 密码至少4个字符';
+                registerError.classList.add('show');
+                return;
+            }
+
+            if (password !== confirm) {
+                registerError.textContent = '⚠️ 两次输入的密码不一致';
+                registerError.classList.add('show');
+                registerConfirm.value = '';
+                registerConfirm.focus();
+                return;
+            }
+
+            if (registerUser(username, password)) {
+                registerError.classList.remove('show');
+                // 注册成功，自动登录
+                showMain(username);
+            } else {
+                registerError.textContent = '❌ 用户名已被注册，请换一个';
+                registerError.classList.add('show');
+                registerUsername.value = '';
+                registerUsername.focus();
+            }
+        }
+
+        // ============================================================
+        //  文本编辑逻辑
+        // ============================================================
+
+        function enterEditMode() {
+            if (isEditing) return;
+            if (!currentUser) return;
+
+            const currentText = textContent.textContent;
+            // 创建 input
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.className = 'text-input';
+            input.value = currentText;
+            input.placeholder = '输入你想保存的字符…';
+            input.autofocus = true;
+
+            // 替换内容
+            textContent.textContent = '';
+            textContent.appendChild(input);
+            textDisplay.classList.add('editing');
+            isEditing = true;
+
+            // 全选
+            input.select();
+
+            // 保存函数
+            function saveEdit() {
+                if (!isEditing) return;
+                const newText = input.value.trim() || '（空）';
+                // 更新显示
+                textContent.textContent = newText;
+                textDisplay.classList.remove('editing');
+                isEditing = false;
+                // 保存到存储
+                setUserText(currentUser, newText);
+                // 显示保存提示
+                showSaveToast();
+            }
+
+            // 回车保存
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    input.blur();
+                }
+                if (e.key === 'Escape') {
+                    input.value = currentText;
+                    input.blur();
+                }
+            });
+
+            // 失去焦点保存
+            input.addEventListener('blur', saveEdit);
+        }
+
+        function showSaveToast() {
+            saveToast.classList.add('show');
+            clearTimeout(saveToast._timer);
+            saveToast._timer = setTimeout(() => {
+                saveToast.classList.remove('show');
+            }, 2000);
+        }
+
+        // ============================================================
+        //  退出登录
+        // ============================================================
+
+        function doLogout() {
+            if (isEditing) {
+                // 如果正在编辑，强制退出编辑模式
+                const input = textContent.querySelector('.text-input');
+                if (input) {
+                    const val = input.value.trim() || '（空）';
+                    textContent.textContent = val;
+                    textDisplay.classList.remove('editing');
+                    isEditing = false;
+                    setUserText(currentUser, val);
+                }
+            }
+            currentUser = null;
+            showLogin();
+        }
+
+        // ============================================================
+        //  事件绑定
+        // ============================================================
+
+        // 登录
+        loginBtn.addEventListener('click', doLogin);
+        loginUsername.addEventListener('keydown', (e) => { if (e.key === 'Enter') loginPassword.focus(); });
+        loginPassword.addEventListener('keydown', (e) => { if (e.key === 'Enter') doLogin(); });
+
+        // 注册
+        registerBtn.addEventListener('click', doRegister);
+        registerUsername.addEventListener('keydown', (e) => { if (e.key === 'Enter') registerPassword.focus(); });
+        registerPassword.addEventListener('keydown', (e) => { if (e.key === 'Enter') registerConfirm.focus(); });
+        registerConfirm.addEventListener('keydown', (e) => { if (e.key === 'Enter') doRegister(); });
+
+        // 切换页面
+        gotoRegister.addEventListener('click', showRegister);
+        gotoLogin.addEventListener('click', showLogin);
+
+        // 退出
+        logoutBtn.addEventListener('click', doLogout);
+
+        // 点击文本区域进入编辑
+        textDisplay.addEventListener('click', (e) => {
+            // 如果点击的是 input 本身，不重复触发
+            if (e.target.tagName === 'INPUT') return;
+            enterEditMode();
+        });
+
+        // 点击外部（页面其他地方）不会触发，但 blur 已经处理保存
+
+        // ============================================================
+        //  自动登录检查（刷新页面保持登录状态）
+        // ============================================================
+
+        // 尝试从存储中恢复登录状态 —— 我们可以从 localStorage 中读取上次登录的用户
+        // 但为了安全，我们简单检查是否有 "记住" 机制。这里我们用一个简单方案：
+        // 如果 localStorage 中存有 lastUser，并且该用户存在，则自动登录。
+        // 但为了演示，我们不自动登录，让用户手动登录。
+        // 但是我们可以提供一个"记住我"的功能？为了简洁，我们不增加复杂度。
+        // 用户刷新页面后需要重新登录，这是最安全的。
+
+        // 不过我们可以做一个简单的优化：如果当前有登录用户，刷新后保持登录？
+        // 但 localStorage 中并没有存储 session 信息，所以刷新后需要重新登录。
+        // 为了更好的体验，我们可以在登录成功后，在 sessionStorage 中记录登录状态。
+        // 但为了安全，我们采用最直接的方式：刷新后需要重新登录。
+
+        // 但很多用户希望刷新后保持登录，我们使用 sessionStorage 来保持
+        // 但 sessionStorage 在页面关闭后失效，刷新页面仍然有效。
+        // 更好的方式：使用 localStorage 存储一个 token，但这里我们简单处理。
+
+        // 我决定使用 sessionStorage 来保持登录状态，这样刷新页面不会丢失登录状态。
+        // 关闭浏览器标签页后，需要重新登录。
+
+        function tryAutoLogin() {
+            const saved = sessionStorage.getItem('auth_app_session');
+            if (saved) {
+                try {
+                    const data = JSON.parse(saved);
+                    if (data.username && verifyLogin(data.username, data.password)) {
+                        showMain(data.username);
+                        return true;
+                    }
+                } catch (_) { /* ignore */ }
+            }
+            return false;
+        }
+
+        // 在登录成功后保存 session
+        function saveSession(username, password) {
+            sessionStorage.setItem('auth_app_session', JSON.stringify({ username, password }));
+        }
+
+        // 在退出时清除 session
+        function clearSession() {
+            sessionStorage.removeItem('auth_app_session');
+        }
+
+        // 重写 showMain 以保存 session
+        const originalShowMain = showMain;
+        showMain = function(username) {
+            // 获取密码（从登录表单或注册表单）
+            // 为了保存session，我们需要密码。但注册时密码已知。
+            // 简单起见：在登录/注册时保存session
+            originalShowMain(username);
+        };
+
+        // 重写 doLogin
+        const originalDoLogin = doLogin;
+        doLogin = function() {
+            const username = loginUsername.value.trim();
+            const password = loginPassword.value.trim();
+            if (!username || !password) {
+                loginError.textContent = '⚠️ 请填写完整的账号和密码';
+                loginError.classList.add('show');
+                return;
+            }
+            if (verifyLogin(username, password)) {
+                loginError.classList.remove('show');
+                saveSession(username, password);
+                showMain(username);
+            } else {
+                loginError.textContent = '❌ 账号或密码错误，请重试';
+                loginError.classList.add('show');
+                loginPassword.value = '';
+                loginPassword.focus();
+            }
+        };
+
+        // 重写 doRegister
+        const originalDoRegister = doRegister;
+        doRegister = function() {
+            const username = registerUsername.value.trim();
+            const password = registerPassword.value.trim();
+            const confirm = registerConfirm.value.trim();
+
+            if (!username || !password || !confirm) {
+                registerError.textContent = '⚠️ 请填写所有字段';
+                registerError.classList.add('show');
+                return;
+            }
+            if (username.length < 2) {
+                registerError.textContent = '⚠️ 用户名至少2个字符';
+                registerError.classList.add('show');
+                return;
+            }
+            if (password.length < 4) {
+                registerError.textContent = '⚠️ 密码至少4个字符';
+                registerError.classList.add('show');
+                return;
+            }
+            if (password !== confirm) {
+                registerError.textContent = '⚠️ 两次输入的密码不一致';
+                registerError.classList.add('show');
+                registerConfirm.value = '';
+                registerConfirm.focus();
+                return;
+            }
+            if (registerUser(username, password)) {
+                registerError.classList.remove('show');
+                saveSession(username, password);
+                showMain(username);
+            } else {
+                registerError.textContent = '❌ 用户名已被注册，请换一个';
+                registerError.classList.add('show');
+                registerUsername.value = '';
+                registerUsername.focus();
+            }
+        };
+
+        // 重写 doLogout
+        const originalDoLogout = doLogout;
+        doLogout = function() {
+            if (isEditing) {
+                const input = textContent.querySelector('.text-input');
+                if (input) {
+                    const val = input.value.trim() || '（空）';
+                    textContent.textContent = val;
+                    textDisplay.classList.remove('editing');
+                    isEditing = false;
+                    setUserText(currentUser, val);
+                }
+            }
+            currentUser = null;
+            clearSession();
+            showLogin();
+        };
+
+        // ============================================================
+        //  键盘快捷键：Ctrl+Enter 保存编辑
+        // ============================================================
+
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.key === 'Enter' && isEditing) {
+                const input = textContent.querySelector('.text-input');
+                if (input) {
+                    input.blur();
+                }
+            }
+        });
+
+        // ============================================================
+        //  初始化
+        // ============================================================
+
+        // 尝试自动登录
+        if (!tryAutoLogin()) {
+            showLogin();
+        }
+
+        console.log('✅ 应用已启动 — 登录后可编辑字符，数据保存在 localStorage');
+    </script>
+
+</body>
+</html>
